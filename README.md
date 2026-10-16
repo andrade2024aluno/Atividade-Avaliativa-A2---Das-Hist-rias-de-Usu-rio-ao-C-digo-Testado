@@ -84,10 +84,46 @@
 
 **Trecho do e-mail:** "A coordenação precisa de um relatório mensal com as horas atendidas por cada monitor, porque isso conta para o pagamento da bolsa. Essas informações de bolsa não podem ficar visíveis para todo mundo."
 
-## Decisões da dupla (da Parte 1)
+História escolhida:
 
-O cliente deixou alguns pontos em aberto, e a dupla definiu:
+Como aluno, eu quero escolher a disciplina, ver os horários disponíveis e marcar o atendimento informando a minha dúvida, para marcar a monitoria de forma fácil e rápida.
 
-- Cancelamento pelo aluno permitido até 2 horas antes do atendimento.
-- Aluno que não cancela e falta recebe advertência; com 2 faltas, é bloqueado.
-- Atendimento em grupo é decisão do monitor, que junta alunos com a mesma dúvida.
+Escolhida por ter prioridade Alta e porque o restante do sistema depende dela.
+
+Estrutura de classes
+
+O sistema usa uma classe base e uma classe por tipo de usuário, com herança, além de uma classe pequena para o horário.
+
+Classe Usuario (base) Guarda o nome. É a classe da qual os tipos de usuário herdam.
+
+Classe Aluno (herda de Usuario) Guarda se o aluno está bloqueado. É quem executa a marcação.
+
+marcar_monitoria(horario, duvida): verifica se o aluno está bloqueado e se o horário está disponível. Se estiver tudo certo, registra a marcação salvando a dúvida. Caso contrário, lança uma exceção com mensagem clara.
+
+Classe Monitor (herda de Usuario) Guarda a disciplina que atende e a sua lista de disponibilidades.
+
+adicionar_disponibilidade(data_hora): cria um horário de 30 minutos para o monitor e o guarda na sua lista.
+horarios_disponiveis(): devolve somente os horários livres do monitor.
+
+Classe Horario Representa um horário de 30 minutos de um monitor. Guarda a disciplina, o monitor, a data e hora, o aluno que marcou (se houver) e a dúvida informada.
+
+esta_disponivel(): diz se o horário ainda está livre.
+
+Função listar_horarios_disponiveis(monitores, disciplina) Percorre os monitores da disciplina escolhida e junta os horários livres de todos. É o que o aluno usa para "ver os horários da disciplina".
+
+Exceções: uma para horário já ocupado e outra para aluno bloqueado.
+
+Professor e Coordenacao também herdam de Usuario, mas ficam apenas como esqueleto, pois pertencem às histórias 4 e 5, que não serão implementadas.
+
+Nada depende de dados digitados durante a execução: os métodos recebem e devolvem valores, para que os testes os chamem diretamente.
+
+Critérios de aceitação e testes
+Critério	Teste	Cenário
+O aluno escolhe a disciplina e vê apenas os horários disponíveis dela	test_lista_somente_horarios_livres_da_disciplina	Sucesso
+O aluno informa a dúvida ao marcar, e ela fica salva	test_marcacao_salva_a_duvida	Sucesso
+Depois de marcado, o horário deixa de aparecer como disponível	test_horario_marcado_nao_aparece_na_lista	Sucesso
+O sistema não permite marcar um horário já ocupado	test_marcar_horario_ocupado_lanca_excecao	Falha
+O aluno bloqueado não consegue marcar monitoria	test_aluno_bloqueado_nao_marca	Falha
+Organização dos arquivos
+
+O código fica na pasta codigo/, com um arquivo para as classes e outro para os testes com unittest.
