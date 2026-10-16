@@ -85,10 +85,9 @@
 
 # Projeto Inicial - História 1: Marcar monitoria
 
-**Dupla:** Vinicius Gonçalves de Andrade (a2669765) e Lucas Gabriel Rodrigues de Moraes (a2669595)
+**Dupla:** Vinicius Gonçalves de Andrade e Lucas Gabriel Rodrigues de Moraes 
 
 ## História escolhida
-
 Como aluno, eu quero escolher a disciplina, ver os horários disponíveis e marcar o atendimento informando a minha dúvida, para marcar a monitoria de forma fácil e rápida.
 
 Escolhida por ter prioridade Alta e porque o restante do sistema depende dela.
