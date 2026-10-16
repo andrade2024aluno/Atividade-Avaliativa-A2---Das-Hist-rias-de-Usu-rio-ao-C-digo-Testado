@@ -1,5 +1,5 @@
 # Histórias de Usuário - Agendamento de Monitorias
-**Dupla:** Vinicius Gonçalves de Andrade (a2669765) e Lucas Gabriel Rodrigues de Moraes (a2669595)
+**Dupla:** Vinicius Gonçalves de Andrade e Lucas Gabriel Rodrigues de Moraes
 
 ## História 1: Marcar monitoria
 **Como** aluno, **eu quero** escolher a disciplina, ver os horários disponíveis e marcar o atendimento informando a minha dúvida **para** marcar a monitoria de forma fácil e rápida, sem combinar por mensagem com o monitor.
