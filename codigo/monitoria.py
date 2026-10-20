@@ -1,10 +1,15 @@
+from datetime import datetime
+
+
 class AlunoBloqueadoError(Exception):
-    """Exceção lançada quando um aluno bloqueado tenta marcar monitoria."""
     pass
 
 
 class HorarioOcupadoError(Exception):
-    """Exceção lançada quando se tenta marcar um horário já reservado."""
+    pass
+
+
+class CancelamentoForaDoPrazoError(Exception):
     pass
 
 
@@ -14,14 +19,12 @@ class Usuario:
 
 
 class Professor(Usuario):
-    """Professor de uma disciplina, usado na verificação de dúvidas."""
-
     def __init__(self, nome, disciplina):
         super().__init__(nome)
         self.disciplina = disciplina
 
+
 class Coordenacao(Usuario):
-    """Esqueleto para futura geração do relatório mensal de horas."""
     pass
 
 
@@ -34,9 +37,10 @@ class Horario:
         self.aluno = None
         self.duvida = None
         self.em_grupo = False
+        self.cancelado_pelo_monitor = False
 
     def esta_disponivel(self):
-        return self.aluno is None
+        return self.aluno is None and not self.cancelado_pelo_monitor
 
 
 class Monitor(Usuario):
@@ -57,37 +61,63 @@ class Monitor(Usuario):
                 livres.append(horario)
         return livres
 
+    def cancelar_horario(self, horario):
+        if horario in self.disponibilidades:
+            horario.cancelado_pelo_monitor = True
+            horario.aluno = None
+            horario.duvida = None
+
 
 class Aluno(Usuario):
     def __init__(self, nome, bloqueado=False):
         super().__init__(nome)
         self.bloqueado = bloqueado
+        self.faltas = 0
 
     def marcar_monitoria(self, horario, duvida):
         if self.bloqueado:
-            raise AlunoBloqueadoError(
-                f"O aluno {self.nome} está bloqueado e não pode marcar monitoria."
-            )
+            raise AlunoBloqueadoError(f"O aluno {self.nome} esta bloqueado e não pode marcar monitoria")
         if not horario.esta_disponivel():
-            raise HorarioOcupadoError(
-                f"O horário {horario.data_hora} já está ocupado."
-            )
+            raise HorarioOcupadoError(f"O horario {horario.data_hora} ja esta ocupado")
 
         horario.aluno = self
         horario.duvida = duvida
         return horario
+
+    def cancelar_monitoria(self, horario, hora_atual):
+        if horario.aluno != self:
+            raise ValueError("Este horario não foi marcado por este aluno")
+
+        dt_horario = datetime.strptime(f"{horario.data_hora}/2026", "%d/%m %H:%M/%Y")
+        dt_atual = datetime.strptime(f"{hora_atual}/2026", "%d/%m %H:%M/%Y")
+
+        diferenca_horas = (dt_horario - dt_atual).total_seconds() / 3600
+
+        if diferenca_horas < 2:
+            raise CancelamentoForaDoPrazoError("Cancelamento so e permitido com ate 2h de antecedencia")
+
+        horario.aluno = None
+        horario.duvida = None
+        horario.em_grupo = False
+
+    def registrar_falta(self):
+        self.faltas += 1
+        if self.faltas >= 2:
+            self.bloqueado = True
 
 
 def listar_horarios_disponiveis(monitores, disciplina):
     horarios_livres = []
     for monitor in monitores:
         if monitor.disciplina == disciplina:
-            horarios_livres.extend(monitor.horarios_disponiveis())
+            for h in monitor.horarios_disponiveis():
+                horarios_livres.append(h)
     return horarios_livres
 
+
 if __name__ == "__main__":
-    monitor_calculo = Monitor("Vinicius", "Cálculo")
-    monitor_poo = Monitor("Lucas", "POO")
+    monitor_calculo = Monitor("Marcio", "Calculo")
+    monitor_poo = Monitor("Gabriel", "POO")
 
     h1 = monitor_calculo.adicionar_disponibilidade("19/10 14:00")
     h2 = monitor_calculo.adicionar_disponibilidade("19/10 14:30")
@@ -96,12 +126,15 @@ if __name__ == "__main__":
     monitores = [monitor_calculo, monitor_poo]
 
     aluno = Aluno("Ana")
-    disponiveis_calculo = listar_horarios_disponiveis(monitores, "Cálculo")
-    print(f"Horários livres de Cálculo antes da marcação: {len(disponiveis_calculo)}")
+    disponiveis = listar_horarios_disponiveis(monitores, "Calculo")
+    print(f"Horarios livres de Calculo antes da marcação: {len(disponiveis)}")
 
-    aluno.marcar_monitoria(h1, "Dúvida sobre regra da cadeia")
-    print(f"Monitoria marcada por {h1.aluno.nome} no horário {h1.data_hora}")
-    print(f"Dúvida registrada: {h1.duvida}\n")
+    aluno.marcar_monitoria(h1, "Duvida sobre regra da cadeia")
+    print(f"Monitoria marcada por {h1.aluno.nome} as {h1.data_hora}")
+    print(f"Duvida: {h1.duvida}")
 
-    disponiveis_calculo = listar_horarios_disponiveis(monitores, "Cálculo")
-    print(f"Horários livres de Cálculo após a marcação: {len(disponiveis_calculo)}")
+    aluno.cancelar_monitoria(h1, "19/10 11:30")
+    print("Monitoria cancelada com sucesso")
+    
+    disponiveis = listar_horarios_disponiveis(monitores, "Calculo")
+    print(f"Horarios livres de Calculo depois do cancelamento: {len(disponiveis)}")

@@ -1,71 +1,43 @@
-"""Consulta de dúvidas.
-
-  1. FUNÇÕES COMPARTILHADAS
-  2. PARTE DO MONITOR   -> recebe as dúvidas e marca atendimento em grupo
-  3. PARTE DO PROFESSOR -> só vê quais dúvidas mais se repetem
-"""
-
-from collections import Counter
-
-from acesso import exigir_tipo
 from monitoria import Monitor, Professor
 
-
-
-# FUNÇÕES COMPARTILHADAS
-
+#tira os espaços e palavras em maisculo e junta elas pra falitar a leitura
 def normalizar_duvida(texto):
-    """Ignora maiúsculas e espaços a mais ("Regra  da Cadeia" == "regra da cadeia")."""
-    return " ".join(texto.lower().split())
+    palavras = texto.lower().split()
+    return " ".join(palavras)
 
-
+#lista as horas q o monitor pode e tem alunos pra fazer monitoria 
 def duvidas_do_monitor(monitor):
-    """Horários do monitor que têm aluno e dúvida."""
-    return [h for h in monitor.disponibilidades if h.aluno and h.duvida]
+    lista = []
+    for h in monitor.disponibilidades:
+        if h.aluno is not None and h.duvida is not None:
+            lista.append(h)
+    return lista
 
-
-
-# PARTE DO MONITOR
-
-def consultar_duvidas_monitor(usuario):
-    """Dúvidas dos alunos do monitor. Só o próprio monitor acessa."""
-    exigir_tipo(usuario, Monitor)
-    return duvidas_do_monitor(usuario)
-
-
+#ajunta todas as duvidas dos alunos
 def duvidas_repetidas(usuario):
-    """Dúvidas que mais de um aluno tem: {dúvida normalizada: [horários]}."""
     grupos = {}
-    for horario in consultar_duvidas_monitor(usuario):
-        grupos.setdefault(normalizar_duvida(horario.duvida), []).append(horario)
-    return {d: hs for d, hs in grupos.items() if len(hs) > 1}
+    for horario in duvidas_do_monitor(usuario):
+        chave = normalizar_duvida(horario.duvida)
+        if chave not in grupos:
+            grupos[chave] = []
+        grupos[chave].append(horario)
 
+    repetidas = {}
+    for d, hs in grupos.items():
+        if len(hs) > 1:
+            repetidas[d] = hs
+    return repetidas
 
+#procura duvidas iguais se nao tiver manda erro 
 def marcar_em_grupo(usuario, duvida):
-    """O monitor decide marcar como atendimento em grupo uma dúvida repetida.
+    repetidas = duvidas_repetidas(usuario)
+    chave = normalizar_duvida(duvida)
 
-    Só funciona se mais de um aluno tiver essa dúvida; senão, lança ValueError.
-    Devolve os horários marcados como em grupo.
-    """
-    horarios = duvidas_repetidas(usuario).get(normalizar_duvida(duvida))
-    if not horarios:
-        raise ValueError("Não há mais de um aluno com essa dúvida.")
+    if chave not in repetidas:
+        raise ValueError("Não ha mais de um aluno com essa duvida")
+
+    horarios = repetidas[chave]
     for horario in horarios:
         horario.em_grupo = True
     return horarios
 
-
-# PARTE DO PROFESSOR
-
-def ranking_duvidas(usuario, monitores):
-    """Dúvidas da disciplina do professor, da mais para a menos frequente.
-
-    Devolve lista de (dúvida, quantidade). Sem monitorias, lista vazia.
-    """
-    exigir_tipo(usuario, Professor)
-    contagem = Counter()
-    for monitor in monitores:
-        if monitor.disciplina == usuario.disciplina:
-            for horario in duvidas_do_monitor(monitor):
-                contagem[normalizar_duvida(horario.duvida)] += 1
-    return contagem.most_common()
