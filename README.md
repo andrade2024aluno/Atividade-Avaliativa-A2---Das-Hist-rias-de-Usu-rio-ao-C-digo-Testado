@@ -117,8 +117,6 @@ Percorre os monitores da disciplina escolhida e junta os horários livres de tod
 
 **Exceções:** uma para horário já ocupado e outra para aluno bloqueado.
 
-**Professor e Coordenacao** também herdam de Usuario, mas ficam apenas como esqueleto, pois pertencem às histórias 4 e 5, que não serão implementadas.
-
 Nada depende de dados digitados durante a execução: os métodos recebem e devolvem valores, para que os testes os chamem diretamente.
 
 ## Critérios de aceitação e testes
