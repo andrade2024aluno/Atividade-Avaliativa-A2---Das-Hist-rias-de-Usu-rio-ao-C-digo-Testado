@@ -14,9 +14,11 @@ class Usuario:
 
 
 class Professor(Usuario):
-    """Esqueleto para futura verificação de dúvidas da disciplina."""
-    pass
+    """Professor de uma disciplina, usado na verificação de dúvidas."""
 
+    def __init__(self, nome, disciplina):
+        super().__init__(nome)
+        self.disciplina = disciplina
 
 class Coordenacao(Usuario):
     """Esqueleto para futura geração do relatório mensal de horas."""
@@ -31,6 +33,7 @@ class Horario:
         self.duracao_minutos = 30
         self.aluno = None
         self.duvida = None
+        self.em_grupo = False
 
     def esta_disponivel(self):
         return self.aluno is None
